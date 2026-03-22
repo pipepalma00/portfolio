@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<!-- v5.3 -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Portfolio">
+<meta name="theme-color" content="#080d1a">
+<title>Dashboard Portafolio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#080d1a;
+    --surface:#0f1729;
+    --surface2:#162038;
+    --surface3:#1a2744;
+    --border:rgba(255,255,255,0.07);
+    --border2:rgba(255,255,255,0.12);
+    --accent:#3b82f6;
+    --accent2:#06b6d4;
+    --green:#10b981;
+    --green-dim:#064e3b;
+    --red:#f43f5e;
+    --red-dim:#4c0519;
+    --amber:#f59e0b;
+    --text:#e2e8f0;
+    --text2:#94a3b8;
+    --text3:#475569;
+    --mono:'DM Mono',monospace;
+    --sans:'DM Sans',sans-serif;
+    --radius:8px;
+  }
+
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans)}
+
+  /* ── Layout ── */
+  .shell{max-width:1200px;margin:0 auto;padding:32px 24px;padding-top:max(32px,env(safe-area-inset-top));padding-bottom:max(32px,env(safe-area-inset-bottom))}
+
+  /* ── Header ── */
+  .hdr{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+  .hdr-left h1{font-size:22px;font-weight:600;letter-spacing:-0.3px;margin-bottom:2px}
+  .hdr-left p{font-size:11px;color:var(--text3);font-family:var(--mono)}
+  .btn-wrap{display:flex;gap:8px;align-items:center}
+  .ts-badge{font-size:10px;color:var(--text3);font-family:var(--mono);
+    padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;
+    font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;letter-spacing:.2px}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:#2563eb;transform:translateY(-1px)}
+  .btn-primary.loading svg{animation:spin .6s linear infinite}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── Config URL ── */
+  .url-bar{display:none}
+
+  /* ── Scroll horizontal tabla móvil ── */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
+  .table-scroll::-webkit-scrollbar{height:3px}
+  .table-scroll::-webkit-scrollbar-track{background:transparent}
+  .table-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  .pos-table{min-width:580px}
+
+  /* ── Error / loading states ── */
+  .state-box{text-align:center;padding:60px 20px}
+  .state-box .icon{font-size:32px;margin-bottom:12px}
+  .state-box h3{font-size:16px;font-weight:500;margin-bottom:6px}
+  .state-box p{font-size:12px;color:var(--text2);max-width:400px;margin:0 auto;line-height:1.6}
+  .state-box code{background:var(--surface2);padding:2px 6px;border-radius:3px;font-size:11px;font-family:var(--mono)}
+
+  /* ── KPI Grid ── */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px 22px;position:relative;overflow:hidden;transition:border-color .2s}
+  .kpi-card:hover{border-color:var(--border2)}
+  .kpi-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px}
+  .kpi-card.blue::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .kpi-card.green::before{background:var(--green)}
+  .kpi-card.red::before{background:var(--red)}
+  .kpi-card.amber::before{background:var(--amber)}
+  .kpi-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);
+    font-weight:500;margin-bottom:8px}
+  .kpi-val{font-size:24px;font-weight:600;font-family:var(--mono);letter-spacing:-1px;line-height:1}
+  .kpi-sub{font-size:11px;color:var(--text2);margin-top:6px}
+  .pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--text2)}
+
+  /* ── Grid principal ── */
+  .main-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px}
+  @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+
+  /* ── Cards ── */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+  .card-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;
+    justify-content:space-between;align-items:center}
+  .card-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);font-weight:500}
+  .card-body{padding:20px}
+  .card-body.no-pad{padding:0}
+
+  /* ── Tabla posiciones ── */
+  .pos-table{width:100%;border-collapse:collapse}
+  .pos-table th{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);
+    padding:10px 14px;text-align:right;font-weight:500;border-bottom:1px solid var(--border)}
+  .pos-table th:first-child{text-align:left}
+  .pos-table td{padding:11px 14px;text-align:right;font-family:var(--mono);font-size:11px;
+    border-bottom:1px solid var(--border);vertical-align:middle}
+  .pos-table td:first-child{text-align:left;font-family:var(--sans)}
+  .pos-table tr:last-child td{border-bottom:none}
+  .pos-table tr:hover td{background:var(--surface2)}
+  .tick{font-weight:700;font-size:12px;display:block}
+  .tick-name{font-size:9px;color:var(--text3);font-weight:400;font-family:var(--sans);margin-top:1px;display:block}
+  .badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:8px;font-weight:700;
+    letter-spacing:.3px;font-family:var(--sans)}
+  .b-etf{background:#1e3a5f;color:#60a5fa}
+  .b-short{background:#3b1f2b;color:#f87171}
+  .b-stock{background:#1a3028;color:#34d399}
+  .b-other{background:var(--surface3);color:var(--text2)}
+  .pnl-cell{line-height:1.3}
+  .pnl-pct{font-size:9px;opacity:.7}
+  .bar-wrap{display:flex;align-items:center;gap:6px}
+  .bar-bg{flex:1;height:3px;background:var(--surface3);border-radius:2px;max-width:60px}
+  .bar-fill{height:100%;border-radius:2px;background:var(--accent)}
+  .bar-txt{font-size:10px;min-width:32px}
+
+  /* ── Donut ── */
+  .donut-wrap{position:relative;width:180px;height:180px;margin:0 auto 16px}
+  .donut-wrap canvas{position:absolute;top:0;left:0}
+  .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+  .dc-val{font-size:15px;font-weight:600;font-family:var(--mono)}
+  .dc-lbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center}
+  .leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);cursor:default}
+  .leg-dot{width:7px;height:7px;border-radius:50%}
+
+  /* ── Evolución ── */
+  .evo-wrap{height:200px;position:relative}
+
+  /* ── Bottom grid ── */
+  .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.bottom-grid{grid-template-columns:1fr}}
+
+  /* ── Top/Bottom performers ── */
+  .perf-list{display:flex;flex-direction:column;gap:6px;padding:16px}
+  .perf-item{display:flex;justify-content:space-between;align-items:center;
+    padding:8px 10px;border-radius:5px;background:var(--surface2)}
+  .perf-ticker{font-weight:700;font-size:11px}
+  .perf-name{font-size:9px;color:var(--text3)}
+  .perf-pnl{font-family:var(--mono);font-size:11px;font-weight:600;text-align:right}
+  .perf-sub{font-size:9px;opacity:.7}
+
+  /* ── Footer ── */
+  footer{text-align:center;padding:24px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);margin-top:16px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <h1>📈 Portfolio Dashboard</h1>
+      <p id="ts-txt">Portafolio actualizado</p>
+    </div>
+    <div class="btn-wrap">
+      <span class="ts-badge" id="ts-badge">–</span>
+      <button class="btn btn-primary" id="btnRefresh" onclick="fetchData()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Config URL -->
+  <div class="url-bar">
+    <label>🔗 URL de tu Web App:</label>
+    <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+      oninput="onUrlChange()" />
+    <button class="btn btn-primary" onclick="fetchData()" id="btnLoad">Cargar datos</button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div id="root">
+    <div class="state-box">
+      <div class="icon">⚙️</div>
+      <h3>Configura tu Web App</h3>
+      <p>Pega la URL de tu Google Apps Script Web App en el campo de arriba.<br><br>
+        Para obtenerla: en Apps Script → <code>Implementar → Nueva implementación → Aplicación web</code><br>
+        Ejecutar como: <code>Yo</code> · Acceso: <code>Cualquiera</code>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let donutChart = null;
+let evoChart   = null;
+
+const PALETTE = [
+  "#3b82f6","#06b6d4","#10b981","#f59e0b",
+  "#8b5cf6","#ec4899","#f97316","#14b8a6","#6366f1","#84cc16"
+];
+
+// ── URL fija de la Web App
+const API_URL = "https://script.google.com/macros/s/AKfycbwAt1l4-Rc8ZLLppcPEsjZgF223fjsP-PZ6J4RgyRFSeAJga33T-VPN0GwYEzD7SOgk/exec";
+const ENCRYPTED_TOKEN = "JAgmXwReWwFlPVYKLAxFZVtnCVgbNyl0AlNdHRNZKAxdeFFSOBZeGVRWRw==";
+
+// Descifrar token con contraseña (XOR + base64)
+function decryptToken(enc, pwd) {
+  try {
+    const decoded = atob(enc);
+    let result = "";
+    for (let i = 0; i < decoded.length; i++) {
+      result += String.fromCharCode(decoded.charCodeAt(i) ^ pwd.charCodeAt(i % pwd.length));
+    }
+    return result;
+  } catch(e) { return null; }
+}
+
+// Obtener contraseña — pedir al usuario si no está en sessionStorage
+function getPassword() {
+  let pwd = sessionStorage.getItem("dashboard_pwd");
+  if (pwd) return pwd;
+  pwd = prompt("🔐 Ingresa tu contraseña para acceder al dashboard:");
+  if (!pwd) return null;
+  // Verificar que descifra correctamente (token empieza con "TiJ")
+  const test = decryptToken(ENCRYPTED_TOKEN, pwd);
+  if (!test || !test.startsWith("TiJ")) {
+    alert("❌ Contraseña incorrecta. Recarga la página para intentar de nuevo.");
+    return null;
+  }
+  sessionStorage.setItem("dashboard_pwd", pwd);
+  return pwd;
+}
+
+window.addEventListener("load", () => {
+  fetchData();
+});
+
+function onUrlChange() {}
+
+// ── Fetch datos desde la Web App
+async function fetchData() {
+  const url = API_URL;
+
+  const btn = document.getElementById("btnRefresh");
+  btn.classList.add("loading");
+  btn.disabled = true;
+
+  document.getElementById("root").innerHTML = `
+    <div class="state-box">
+      <div class="icon">⏳</div>
+      <h3>Cargando datos...</h3>
+      <p>Conectando con tu Google Sheet. Puede tardar unos segundos.</p>
+    </div>`;
+
+  try {
+    const pwd = getPassword();
+  if (!pwd) { btn.classList.remove("loading"); btn.disabled = false; return; }
+  const token = decryptToken(ENCRYPTED_TOKEN, pwd);
+  if (!token) { btn.classList.remove("loading"); btn.disabled = false; return; }
+  const res  = await fetch(url + "?token=" + token);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    render(data);
+  } catch(e) {
+    document.getElementById("root").innerHTML = `
+      <div class="state-box">
+        <div class="icon">❌</div>
+        <h3>Error al cargar datos</h3>
+        <p>${e.message}<br><br>
+          Verifica que la URL sea correcta y que la Web App esté publicada con acceso <code>Cualquiera</code>.
+          Si es la primera vez, puede que necesites volver a autorizar el script en Apps Script.
+        </p>
+      </div>`;
+  } finally {
+    btn.classList.remove("loading");
+    btn.disabled = false;
+  }
+}
+
+// ── Helpers formato
+function fmt(n, d=2) {
+  if (n===null||n===undefined||isNaN(n)) return "–";
+  const a = Math.abs(n).toLocaleString("es-CL",{minimumFractionDigits:d,maximumFractionDigits:d});
+  return n < 0 ? "("+a+")" : a;
+}
+function fmtPct(n) {
+  if (n===null||isNaN(n)) return "–";
+  return (n>=0?"+":"")+(n*100).toFixed(2)+"%";
+}
+function cls(n) { return n>=0?"pos":"neg"; }
+function badgeCls(tipo) {
+  if (!tipo) return "b-other";
+  const t = tipo.toLowerCase();
+  if (t.includes("short")) return "b-short";
+  if (t.includes("etf"))   return "b-etf";
+  if (t.includes("acci"))  return "b-stock";
+  return "b-other";
+}
+
+// ── Render principal
+function render(D) {
+  const r   = D.resumen;
+  const ts  = new Date(D.timestamp);
+  const tsF = ts.toLocaleDateString("es-CL")+" "+ts.toLocaleTimeString("es-CL");
+
+  document.getElementById("ts-txt").textContent  = "Portafolio actualizado";
+  document.getElementById("ts-badge").textContent = tsF;
+
+  // ── KPIs
+  const bestPos  = [...D.posiciones].sort((a,b)=>b.pnlPct-a.pnlPct)[0];
+  const worstPos = [...D.posiciones].sort((a,b)=>a.pnlPct-b.pnlPct)[0];
+
+  let html = `<div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-lbl">Valor de mercado</div>
+      <div class="kpi-val">$${fmt(r.totalValor,0)}</div>
+      <div class="kpi-sub">${r.nActivos} posiciones activas</div>
+    </div>
+    <div class="kpi-card ${r.totalPnL>=0?"green":"red"}">
+      <div class="kpi-lbl">P&L total</div>
+      <div class="kpi-val ${cls(r.totalPnL)}">${r.totalPnL>=0?"+":""}$${fmt(r.totalPnL,0)}</div>
+      <div class="kpi-sub ${cls(r.retornoPct)}">${fmtPct(r.retornoPct)} sobre capital invertido</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-lbl">Capital invertido</div>
+      <div class="kpi-val">$${fmt(r.totalCosto,0)}</div>
+      <div class="kpi-sub">costo total de posiciones</div>
+    </div>
+    <div class="kpi-card ${bestPos&&bestPos.pnlPct>=0?"green":"red"}">
+      <div class="kpi-lbl">Mejor rendimiento</div>
+      <div class="kpi-val ${bestPos?cls(bestPos.pnlPct):"neu"}">${bestPos?bestPos.ticker:"–"}</div>
+      <div class="kpi-sub ${bestPos?cls(bestPos.pnlPct):"neu"}">${bestPos?fmtPct(bestPos.pnlPct):"–"}</div>
+    </div>
+  </div>`;
+
+  // ── Main grid: tabla + donut
+  html += `<div class="main-grid">`;
+
+  // Tabla posiciones
+  html += `<div class="card">
+    <div class="card-hdr"><span class="card-title">Posiciones</span></div>
+    <div class="card-body no-pad"><div class="table-scroll"><table class="pos-table">
+      <thead><tr>
+        <th>Activo</th><th>Tipo</th><th>Acciones</th>
+        <th>P. prom</th><th>P. actual</th><th>Valor (USD)</th><th>P&L</th><th>Peso</th>
+      </tr></thead><tbody>`;
+
+  D.posiciones.forEach(p => {
+    const barPct = Math.round((p.peso||0)*100);
+    html += `<tr>
+      <td>
+        <span class="tick">${p.ticker}</span>
+        <span class="tick-name">${(p.nombre||"").substring(0,28)}</span>
+      </td>
+      <td><span class="badge ${badgeCls(p.tipo)}">${p.tipo||"–"}</span></td>
+      <td>${fmt(p.acciones,0)}</td>
+      <td style="color:var(--text2)">$${fmt(p.pPromedio)}</td>
+      <td style="color:#60a5fa">$${fmt(p.pActual)}</td>
+      <td>$${fmt(p.valorMerc)}</td>
+      <td class="pnl-cell ${cls(p.pnl)}">
+        <span>${p.pnl>=0?"+":""}$${fmt(p.pnl)}</span><br>
+        <span class="pnl-pct">${fmtPct(p.pnlPct)}</span>
+      </td>
+      <td>
+        <div class="bar-wrap">
+          <div class="bar-bg"><div class="bar-fill" style="width:${barPct}%"></div></div>
+          <span class="bar-txt">${((p.peso||0)*100).toFixed(1)}%</span>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div></div></div>`;
+
+  // Donut
+  html += `<div class="card">
+    <div class="card-hdr"><span class="card-title">Distribución</span></div>
+    <div class="card-body">
+      <div class="donut-wrap">
+        <canvas id="donutC" width="180" height="180"></canvas>
+        <div class="donut-center">
+          <div class="dc-val">$${fmt(r.totalValor,0)}</div>
+          <div class="dc-lbl">Total</div>
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>`;
+
+  html += `</div>`; // end main-grid
+
+  // ── Evolución + Performers
+  // ── Gráfico precios históricos por ticker
+  if (D.preciosTickers && Object.keys(D.preciosTickers).length > 0) {
+    const hasData = Object.values(D.preciosTickers).some(arr => arr && arr.length > 0);
+    if (hasData) {
+      html += `<div class="card" style="margin-bottom:16px">
+        <div class="card-hdr">
+          <span class="card-title">Precio histórico por activo</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:10px;color:var(--text2)" id="precio-legend"></div>
+        </div>
+        <div class="card-body" style="padding:16px 20px">
+          <div style="height:220px;position:relative"><canvas id="preciosC"></canvas></div>
+        </div>
+      </div>`;
+    }
+  }
+
+  html += `<div class="bottom-grid">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Capital invertido acumulado</span></div>
+      <div class="card-body"><div class="evo-wrap"><canvas id="evoC"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Performance por posición</span></div>
+      <div class="perf-list">`;
+
+  [...D.posiciones]
+    .sort((a,b) => b.pnlPct - a.pnlPct)
+    .forEach(p => {
+      html += `<div class="perf-item">
+        <div>
+          <div class="perf-ticker">${p.ticker}</div>
+          <div class="perf-name">${(p.nombre||"").substring(0,22)}</div>
+        </div>
+        <div class="perf-pnl ${cls(p.pnl)}">
+          <div>${p.pnl>=0?"+":""}$${fmt(p.pnl)}</div>
+          <div class="perf-sub">${fmtPct(p.pnlPct)}</div>
+        </div>
+      </div>`;
+    });
+
+  html += `</div></div></div>`;
+
+  html += `<footer>Datos obtenidos desde Google Sheets vía Apps Script. Solo con propósitos informativos, no constituye asesoría financiera.</footer>`;
+
+  document.getElementById("root").innerHTML = html;
+
+  // ── Donut chart
+  if (donutChart) donutChart.destroy();
+  const dCtx = document.getElementById("donutC").getContext("2d");
+  donutChart = new Chart(dCtx, {
+    type: "doughnut",
+    data: {
+      labels: D.posiciones.map(p=>p.ticker),
+      datasets: [{
+        data: D.posiciones.map(p=>p.valorMerc||0),
+        backgroundColor: PALETTE.slice(0, D.posiciones.length),
+        borderColor: "#0f1729",
+        borderWidth: 3,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: false,
+      cutout: "70%",
+      plugins: {
+        legend: {display:false},
+        tooltip: {
+          backgroundColor: "#1a2744",
+          titleColor: "#e2e8f0",
+          bodyColor: "#94a3b8",
+          borderColor: "rgba(255,255,255,0.1)",
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => " "+ctx.label+": $"+fmt(ctx.raw)+" ("+((ctx.raw/r.totalValor)*100).toFixed(1)+"%)"
+          }
+        }
+      }
+    }
+  });
+
+  const legEl = document.getElementById("legend");
+  legEl.innerHTML = D.posiciones.map((p,i) =>
+    `<div class="leg-item">
+      <div class="leg-dot" style="background:${PALETTE[i]}"></div>${p.ticker}
+    </div>`
+  ).join("");
+
+  // ── Precios históricos por ticker
+  if (window.preciosChart) window.preciosChart.destroy();
+  if (D.preciosTickers && Object.keys(D.preciosTickers).length > 0) {
+    const preciosCanvas = document.getElementById("preciosC");
+    if (preciosCanvas) {
+      const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+      function fmtMes(raw) {
+        const s = String(raw||"").trim();
+        const p = s.split("-");
+        if (p.length >= 3) return p[2]+" "+MESES[parseInt(p[1])-1];
+        if (p.length === 2) return MESES[parseInt(p[1])-1]+" "+p[0].substring(2);
+        return s;
+      }
+
+      // Unificar labels (usar el ticker con más puntos como referencia)
+      const allTickers = Object.keys(D.preciosTickers);
+      let refTicker = allTickers[0];
+      allTickers.forEach(t => {
+        if ((D.preciosTickers[t]||[]).length > (D.preciosTickers[refTicker]||[]).length) refTicker = t;
+      });
+      const labelsRaw = (D.preciosTickers[refTicker]||[]).map(p => p.mes);
+      const labels    = labelsRaw.map(fmtMes);
+
+      // Función para encontrar el índice de semana más cercano a una fecha
+      function semanaIdx(fechaOp, labelsRaw) {
+        // Encuentra el índice del label más cercano a la fecha de la operación
+        let minDiff = Infinity, bestIdx = -1;
+        labelsRaw.forEach((m, i) => {
+          const diff = Math.abs(new Date(m) - new Date(fechaOp));
+          if (diff < minDiff) { minDiff = diff; bestIdx = i; }
+        });
+        // Solo marcar si la diferencia es menor a 10 días
+        return minDiff < 10 * 86400000 ? bestIdx : -1;
+      }
+
+      const datasets = allTickers.map((ticker, i) => {
+        const pts = D.preciosTickers[ticker] || [];
+        const dataMap = {};
+        pts.forEach(p => { dataMap[p.mes] = p.precio; });
+        const rawData = labelsRaw.map(m => dataMap[m] || null);
+
+        // Normalizar a base 100
+        const base = rawData.find(v => v !== null && v > 0);
+        const data = rawData.map(v => v !== null && base ? Math.round((v / base) * 10000) / 100 : null);
+
+        // Puntos de operaciones — verde compra, rojo venta
+        const ops = (D.opsPorTicker && D.opsPorTicker[ticker]) || [];
+        const pointColors   = data.map(() => "transparent");
+        const pointRadii    = data.map(() => 0);
+        const pointBorders  = data.map(() => "transparent");
+
+        ops.forEach(op => {
+          const idx = semanaIdx(op.fecha, labelsRaw);
+          if (idx >= 0 && data[idx] !== null) {
+            const esCompra = op.accion.toLowerCase().includes("compra");
+            pointColors[idx]  = esCompra ? "#10b981" : "#f43f5e";
+            pointBorders[idx] = esCompra ? "#10b981" : "#f43f5e";
+            pointRadii[idx]   = 5;
+          }
+        });
+
+        return {
+          label: ticker,
+          data,
+          borderColor: PALETTE[i % PALETTE.length],
+          backgroundColor: "transparent",
+          borderWidth: 2,
+          pointBackgroundColor: pointColors,
+          pointBorderColor: pointBorders,
+          pointRadius: pointRadii,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          spanGaps: true
+        };
+      });
+
+      // Populate legend with correct colors
+      const legendEl = document.getElementById("precio-legend");
+      if (legendEl) {
+        legendEl.innerHTML = allTickers.map((t, i) =>
+          `<span style="display:flex;align-items:center;gap:4px">
+            <span style="width:12px;height:12px;border-radius:50%;background:${PALETTE[i % PALETTE.length]};flex-shrink:0"></span>
+            ${t}
+          </span>`
+        ).join("");
+      }
+
+      window.preciosChart = new Chart(preciosCanvas.getContext("2d"), {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor:"#1a2744", titleColor:"#e2e8f0",
+              bodyColor:"#94a3b8", borderColor:"rgba(255,255,255,0.1)", borderWidth:1,
+              callbacks: {
+                label: ctx => {
+                  const v = ctx.raw;
+                  if (v === null || v === undefined) return "";
+                  const diff = v - 100;
+                  const ticker = ctx.dataset.label;
+                  const idx = ctx.dataIndex;
+                  // Check if there's an operation on this point
+                  const ops = (D.opsPorTicker && D.opsPorTicker[ticker]) || [];
+                  const fechaSemana = labelsRaw[idx];
+                  const op = ops.find(o => semanaIdx(o.fecha, labelsRaw) === idx);
+                  let line = ` ${ticker}: ${v.toFixed(1)} (${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%)`;
+                  if (op) {
+                    const esC = op.accion.toLowerCase().includes("compra");
+                    line += `  ${esC ? "🟢" : "🔴"} ${esC ? "Compra" : "Venta"} ${op.cantidad} @ $${fmt(op.precio)}`;
+                  }
+                  return line;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: "category",
+              ticks: { color:"#475569", font:{size:8}, maxTicksLimit:12 },
+              grid: { color:"rgba(255,255,255,0.04)" }
+            },
+            y: {
+              ticks: {
+                color:"#475569", font:{size:8},
+                callback: v => v.toFixed(0)
+              },
+              grid: { color:"rgba(255,255,255,0.04)" }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // ── Evolución chart
+  if (evoChart) evoChart.destroy();
+  if (D.evolucion && D.evolucion.length > 0) {
+    // Formatear label legible: "05 Ago", "12 Sep", etc.
+    function fmtLabel(raw) {
+      const s = String(raw || "").trim();
+      const M = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+      const p = s.split("-");
+      if (p.length >= 3) return p[2] + " " + M[parseInt(p[1]) - 1];
+      if (p.length === 2) return M[parseInt(p[1]) - 1] + " " + p[0].substring(2);
+      return s;
+    }
+
+    // Normalizar: soporta {capital, valor} (v4) y legacy {costoAcumulado} (v3)
+    const evoData = D.evolucion.map(e => ({
+      mes:     String(e.mes || "").trim(),
+      capital: Number(e.capital ?? e.costoAcumulado ?? 0),
+      valor:   (e.valor != null && e.valor > 0) ? Number(e.valor) : null
+    })).filter(e => e.mes.length >= 7);
+
+    const labels      = evoData.map(e => fmtLabel(e.mes));
+    const capitalData = evoData.map(e => e.capital);
+    const valorData   = evoData.map(e => e.valor);
+    const tieneValor  = D.tieneHistorial && valorData.some(v => v !== null && v > 0);
+
+    const datasets = [{
+      label: "Capital invertido",
+      data: capitalData,
+      borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.08)",
+      borderWidth: 2, fill: true, tension: 0.35,
+      pointBackgroundColor: "#3b82f6", pointRadius: 3, pointHoverRadius: 5
+    }];
+
+    if (tieneValor) {
+      datasets.push({
+        label: "Valor portafolio",
+        data: valorData,
+        borderColor: "#10b981", backgroundColor: "rgba(16,185,129,0.06)",
+        borderWidth: 2, borderDash: [5, 3], fill: true, tension: 0.35,
+        pointBackgroundColor: "#10b981", pointRadius: 3, pointHoverRadius: 5
+      });
+    }
+
+    const eCtx = document.getElementById("evoC").getContext("2d");
+    evoChart = new Chart(eCtx, {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: tieneValor,
+            labels: { color: "#94a3b8", font: { size: 10 }, boxWidth: 20, padding: 12 }
+          },
+          tooltip: {
+            mode: "index", intersect: false,
+            backgroundColor: "#1a2744", titleColor: "#e2e8f0",
+            bodyColor: "#94a3b8", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1,
+            callbacks: { label: ctx => " " + ctx.dataset.label + ": $" + fmt(ctx.raw) }
+          }
+        },
+        scales: {
+          x: {
+            type: "category",
+            ticks: {color:"#475569", font:{size:9}, maxTicksLimit:16},
+            grid: {color:"rgba(255,255,255,0.04)"}
+          },
+          y: { ticks: { color:"#475569", font:{size:9},
+                callback: v => "$" + Math.round(v).toLocaleString("es-CL") },
+               grid: {color:"rgba(255,255,255,0.04)"} }
+        }
+      }
+    });
+
+    if (!D.tieneHistorial) {
+      const note = document.createElement("p");
+      note.style.cssText = "font-size:10px;color:#475569;text-align:center;margin-top:8px;font-style:italic";
+      note.textContent = "Solo muestra capital invertido. Ejecuta '🔄 Actualizar historial de precios' en el Sheet para ver también el valor del portafolio.";
+      document.getElementById("evoC").parentElement.after(note);
+    }
+  }
+}
+</script>
+</body>
+</html>
